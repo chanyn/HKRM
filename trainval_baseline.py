@@ -93,13 +93,13 @@ def parse_args():
 # resume trained model
     parser.add_argument('--r', dest='resume',
                         help='resume checkpoint or not',
-                        default=True, type=bool)
+                        default=False, type=bool)
     parser.add_argument('--checksession', dest='checksession',
                         help='checksession to load model',
                         default=1, type=int)
     parser.add_argument('--checkepoch', dest='checkepoch',
                         help='checkepoch to load model',
-                        default=14, type=int)
+                        default=10, type=int)
     parser.add_argument('--checkpoint', dest='checkpoint',
                         help='checkpoint to load model',
                         default=21985, type=int)
@@ -176,7 +176,7 @@ if __name__ == '__main__':
       args.set_cfgs = ['ANCHOR_SCALES', '[2, 4, 8, 16, 32]', 'MAX_NUM_GT_BOXES', '50']
 
 
-  args.cfg_file = "cfgs/res101.yml"
+  args.cfg_file = "cfgs/res101_ms.yml"
 
   if args.cfg_file is not None:
     cfg_from_file(args.cfg_file)
@@ -201,7 +201,7 @@ if __name__ == '__main__':
   print('{:d} roidb entries'.format(len(roidb)))
   sys.stdout.flush()
 
-  output_dir = args.save_dir[0]
+  output_dir = args.save_dir
   if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 

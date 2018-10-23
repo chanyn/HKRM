@@ -64,7 +64,7 @@ def parse_args():
                         help='number of iterations to display',
                         default=10000, type=int)
     parser.add_argument('--save_dir', dest='save_dir',
-                        help='directory to save models', default="exps/HKRM/models",
+                        help='directory to save models', default="exps",
                         type=str)
     ## Define training parameters
     parser.add_argument('--nw', dest='num_workers',
@@ -99,17 +99,23 @@ def parse_args():
     parser.add_argument('--s', dest='session',
                         help='training session',
                         default=2, type=int)
+    parser.add_argument('--init', dest='init',
+                        help='if first train hkrm',
+                        action='store_true')
+    parser.add_argument('--init_name', dest='init_name',
+                        help='initialize hkrm from ...',
+                        default='faster_rcnn', type=str)
 
 # resume trained model
     parser.add_argument('--r', dest='resume',
                         help='resume checkpoint or not',
-                        default=True, type=bool)
+                        default=False, type=bool)
     parser.add_argument('--checksession', dest='checksession',
                         help='checksession to load model',
                         default=1, type=int)
     parser.add_argument('--checkepoch', dest='checkepoch',
                         help='checkepoch to load model',
-                        default=14, type=int)
+                        default=11, type=int)
     parser.add_argument('--checkpoint', dest='checkpoint',
                         help='checkpoint to load model',
                         default=21985, type=int)
@@ -165,33 +171,25 @@ if __name__ == '__main__':
       args.imdb_name = "vg_train"
       args.imdbval_name = "vg_val"
       args.set_cfgs = ['ANCHOR_SCALES', '[2, 4, 8, 16, 32]', 'MAX_NUM_GT_BOXES', '50']
-      cls_r_prob = pickle.load(open(cfg.DATA_DIR + '/graph/vg_graph_r.pkl', 'rb'))
+      cls_r_prob = pickle.load(open('data/graph/vg_graph_r.pkl', 'rb'))
       cls_r_prob = np.float32(cls_r_prob)
-      cls_a_prob = pickle.load(open(cfg.DATA_DIR + '/graph/vg_graph_a.pkl', 'rb'))
+      cls_a_prob = pickle.load(open('data/graph/vg_graph_a.pkl', 'rb'))
       cls_a_prob = np.float32(cls_a_prob)
   elif args.dataset == "ade":
       args.imdb_name = "ade_train_5"
       args.imdbval_name = "ade_val_5"
       args.set_cfgs = ['ANCHOR_SCALES', '[2, 4, 8, 16, 32]', 'MAX_NUM_GT_BOXES', '50']
-      cls_r_prob = pickle.load(open(cfg.DATA_DIR + '/graph/ade_graph_r.pkl', 'rb'))
+      cls_r_prob = pickle.load(open('data/graph/ade_graph_r.pkl', 'rb'))
       cls_r_prob = np.float32(cls_r_prob)
-      cls_a_prob = pickle.load(open(cfg.DATA_DIR + '/graph/ade_graph_a.pkl', 'rb'))
+      cls_a_prob = pickle.load(open('data/graph/ade_graph_a.pkl', 'rb'))
       cls_a_prob = np.float32(cls_a_prob)
   elif args.dataset == "vgbig":
       args.imdb_name = "vg_train_big"
       args.imdbval_name = "vg_val_big"
       args.set_cfgs = ['ANCHOR_SCALES', '[2, 4, 8, 16, 32]', 'MAX_NUM_GT_BOXES', '50']
-      cls_r_prob = pickle.load(open(cfg.DATA_DIR + '/graph/vg_big_graph_r.pkl', 'rb'))
+      cls_r_prob = pickle.load(open('data/graph/vg_big_graph_r.pkl', 'rb'))
       cls_r_prob = np.float32(cls_r_prob)
-      cls_a_prob = pickle.load(open(cfg.DATA_DIR + '/graph/vg_big_graph_a.pkl', 'rb'))
-      cls_a_prob = np.float32(cls_a_prob)
-  elif args.dataset == "coco":
-      args.imdb_name = "coco_2014_train+coco_2014_valminusminival"
-      args.imdbval_name = "coco_2014_minival"
-      args.set_cfgs = ['ANCHOR_SCALES', '[4, 8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '50']
-      cls_r_prob = pickle.load(open(cfg.DATA_DIR + '/graph/COCO_graph_r.pkl', 'rb'))
-      cls_r_prob = np.float32(cls_r_prob)
-      cls_a_prob = pickle.load(open(cfg.DATA_DIR + '/graph/COCO_graph_a.pkl', 'rb'))
+      cls_a_prob = pickle.load(open('data/graph/vg_big_graph_a.pkl', 'rb'))
       cls_a_prob = np.float32(cls_a_prob)
 
   args.cfg_file = "cfgs/res101_ms.yml"
@@ -219,7 +217,7 @@ if __name__ == '__main__':
   print('{:d} roidb entries'.format(len(roidb)))
   sys.stdout.flush()
 
-  output_dir = args.save_dir[0]
+  output_dir = args.save_dir
   if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
@@ -277,8 +275,8 @@ if __name__ == '__main__':
   for key, value in dict(fasterRCNN.named_parameters()).items():
     if value.requires_grad:
       if 'bias' in key:
-        params += [{'params':[value],'lr':lr*(cfg.TRAIN.DOUBLE_BIAS + 1), \
-                'weight_decay': cfg.TRAIN.BIAS_DECAY and cfg.TRAIN.WEIGHT_DECAY or 0}]
+          params += [{'params': [value], 'lr': lr * (cfg.TRAIN.DOUBLE_BIAS + 1),
+                      'weight_decay': cfg.TRAIN.BIAS_DECAY and cfg.TRAIN.WEIGHT_DECAY or 0}]
       else:
         params += [{'params':[value],'lr':lr, 'weight_decay': cfg.TRAIN.WEIGHT_DECAY}]
 
@@ -289,6 +287,18 @@ if __name__ == '__main__':
   elif args.optimizer == "sgd":
     optimizer = torch.optim.SGD(params, momentum=cfg.TRAIN.MOMENTUM)
 
+  if args.init:
+    load_name = os.path.join(output_dir, '{}_{}.pth'.format(args.dataset, args.init_name))
+    print("loading initial baseline model %s" % (load_name))
+    checkpoint = torch.load(load_name)
+
+    for key in list(checkpoint['model'].keys()):
+        if key.find('RCNN_cls_score_hkrm') >= 0 or key.find('RCNN_bbox_pred_hkrm') >= 0:
+            del checkpoint['model'][key]
+
+    fasterRCNN.load_state_dict(checkpoint['model'], strict=False)
+    print("successfully loaded baseline model %s" % (load_name))
+
   if args.resume:
     load_name = os.path.join(output_dir,
                              '{}_{}_{}_{}_{}.pth'.format(args.dataset, args.ftnet, args.checksession,
@@ -297,7 +307,7 @@ if __name__ == '__main__':
     checkpoint = torch.load(load_name)
     args.session = checkpoint['session']
     args.start_epoch = checkpoint['epoch']
-    fasterRCNN.load_state_dict(checkpoint['model'])
+    fasterRCNN.load_state_dict(checkpoint['model'], strict=False)
     optimizer.load_state_dict(checkpoint['optimizer'])
     lr = optimizer.param_groups[0]['lr']
     if 'pooling_mode' in checkpoint.keys():
@@ -348,8 +358,8 @@ if __name__ == '__main__':
         # backward
         optimizer.zero_grad()
         loss.backward()
-        if args.net == "vgg16" or "res101":
-            clip_gradient(fasterRCNN, 10.)
+        # if args.net == "vgg16" or "res101":
+        #     clip_gradient(fasterRCNN, 10.)
         optimizer.step()
 
         if step % args.disp_interval == 0:

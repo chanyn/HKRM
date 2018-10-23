@@ -31,6 +31,9 @@ from model.utils.net_utils import save_net, load_net, vis_detections, vis_detect
 from matplotlib import pyplot as plt
 import pdb
 
+from model.utils.net_utils import weights_normal_init, save_net, load_net, \
+      adjust_learning_rate, save_checkpoint, clip_gradient
+
 try:
     xrange          # Python 2
 except NameError:
@@ -46,7 +49,7 @@ def parse_args():
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file',default='cfgs/res101_ms.yml', type=str)
     ## Define Model and data
-    pparser.add_argument('--dataset', dest='dataset',
+    parser.add_argument('--dataset', dest='dataset',
                         help='training dataset:ade,vg,vgbig,coco,pascal_07_12',
                         default='vg', type=str)
     parser.add_argument('--net', dest='net',
@@ -63,21 +66,20 @@ def parse_args():
                         default=256, type=int)
 
     parser.add_argument('--set', dest='set_cfgs',
-                      help='set config keys', default=None,
-                      nargs=argparse.REMAINDER)
-    parser.add_argument('--cuda', dest='cuda',default=True, type=bool,
+                        help='set config keys', default=None,
+                        nargs=argparse.REMAINDER)
+    parser.add_argument('--cuda', dest='cuda',
+                        default=True, type=bool,
                         help='whether use CUDA')
-    parser.add_argument('--mGPUs', dest='mGPUs',
-                        help='whether use multiple GPUs',
-                        action='store_true')
-    parser.add_argument('--cag', dest='class_agnostic',default=True, type=bool,
+    parser.add_argument('--cag', dest='class_agnostic',
+                        default=True, type=bool,
                         help='whether perform class_agnostic bbox regression')
     parser.add_argument('--parallel_type', dest='parallel_type',
                         help='which part of model to parallel, 0: all, 1: model before roi pooling',
                         default=0, type=int)
     # resume trained model
     parser.add_argument('--load_dir', dest='load_dir',
-                        help='directory to load models', default="exps/HKRM/models",
+                        help='directory to load models', default="exps",
                         type=str)
     parser.add_argument('--checksession', dest='checksession',
                         help='checksession to load model',
@@ -92,8 +94,9 @@ def parse_args():
     parser.add_argument('--bs', dest='batch_size',
                         help='batch_size',
                         default=1, type=int)
-    parser.add_argument('--vis', dest='vis',default=False, type=bool,
-                        help='visualization mode')
+    parser.add_argument('--vis', dest='vis',
+                        help='visualization mode',
+                        action='store_true')
     parser.add_argument('--save', dest='save_dir',
                         help='directory to save logs', default='HKRM',
                         type=str)
@@ -107,7 +110,7 @@ weight_decay = cfg.TRAIN.WEIGHT_DECAY
 if __name__ == '__main__':
     args = parse_args()
 
-    if args.arch == 'baseline':
+    if args.net == 'baseline':
     	from model.faster_rcnn.resnet import resnet
     else:
         from model.HKRM.resnet_HKRM import resnet
@@ -123,47 +126,42 @@ if __name__ == '__main__':
         args.imdb_name = "vg_train"
         args.imdbval_name = "vg_val"
         args.set_cfgs = ['ANCHOR_SCALES', '[2, 4, 8, 16, 32]', 'MAX_NUM_GT_BOXES', '50']
-        cls_r_prob = pickle.load(open(cfg.DATA_DIR + '/vg/vg_graph_r.pkl', 'rb'))
+        cls_r_prob = pickle.load(open('data/graph/vg_graph_r.pkl', 'rb'))
         cls_r_prob = np.float32(cls_r_prob)
-        cls_a_prob = pickle.load(open(cfg.DATA_DIR + '/vg/vg_graph_a.pkl', 'rb'))
+        cls_a_prob = pickle.load(open('data/graph/vg_graph_a.pkl', 'rb'))
         cls_a_prob = np.float32(cls_a_prob)
-        args.cfg_file = "cfgs/res101_ms.yml"
     elif args.dataset == "ade":
         args.imdb_name = "ade_train_5"
         args.imdbval_name = "ade_val_5"
         args.set_cfgs = ['ANCHOR_SCALES', '[2, 4, 8, 16, 32]', 'MAX_NUM_GT_BOXES', '50']
-        cls_r_prob = pickle.load(open(cfg.DATA_DIR + '/ADE/ade_graph_r.pkl', 'rb'))
+        cls_r_prob = pickle.load(open('data/graph/ade_graph_r.pkl', 'rb'))
         cls_r_prob = np.float32(cls_r_prob)
-        cls_a_prob = pickle.load(open(cfg.DATA_DIR + '/ADE/ade_graph_a.pkl', 'rb'))
+        cls_a_prob = pickle.load(open('data/graph/ade_graph_a.pkl', 'rb'))
         cls_a_prob = np.float32(cls_a_prob)
-        args.cfg_file = "cfgs/res101_ms.yml"
     elif args.dataset == "vgbig":
         args.imdb_name = "vg_train_big"
         args.imdbval_name = "vg_val_big"
         args.set_cfgs = ['ANCHOR_SCALES', '[2, 4, 8, 16, 32]', 'MAX_NUM_GT_BOXES', '50']
-        cls_r_prob = pickle.load(open(cfg.DATA_DIR + '/vg/vg_big_graph_r.pkl', 'rb'))
+        cls_r_prob = pickle.load(open('data/graph/vg_big_graph_r.pkl', 'rb'))
         cls_r_prob = np.float32(cls_r_prob)
-        cls_a_prob = pickle.load(open(cfg.DATA_DIR + '/vg/vg_big_graph_a.pkl', 'rb'))
+        cls_a_prob = pickle.load(open('data/graph/vg_big_graph_a.pkl', 'rb'))
         cls_a_prob = np.float32(cls_a_prob)
-        args.cfg_file = "cfgs/res101_ms.yml"
+    elif args.dataset == "coco":
+        args.imdb_name = "coco_2014_train+coco_2014_valminusminival"
+        args.imdbval_name = "coco_2014_minival"
+        args.set_cfgs = ['ANCHOR_SCALES', '[4, 8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '50']
+        cls_r_prob = pickle.load(open('data/graph/COCO_graph_r.pkl', 'rb'))
+        cls_r_prob = np.float32(cls_r_prob)
+        cls_a_prob = pickle.load(open('data/graph/COCO_graph_a.pkl', 'rb'))
+        cls_a_prob = np.float32(cls_a_prob)
     elif args.dataset == "pascal_voc_0712":
         args.imdb_name = "voc_2007_trainval+voc_2012_trainval"
         args.imdbval_name = "voc_2007_test"
         args.set_cfgs = ['ANCHOR_SCALES', '[8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '20']
-        cls_r_prob = pickle.load(open(cfg.DATA_DIR + '/VOCdevkit2012/VOC_graph_r.pkl', 'rb'))
+        cls_r_prob = pickle.load(open('data/VOC_graph_r.pkl', 'rb'))
         cls_r_prob = np.float32(cls_r_prob)
-        cls_a_prob = pickle.load(open(cfg.DATA_DIR + '/VOCdevkit2012/VOC_graph_a.pkl', 'rb'))
+        cls_a_prob = pickle.load(open('data/VOC_graph_a.pkl', 'rb'))
         cls_a_prob = np.float32(cls_a_prob)
-        args.cfg_file = "cfgs/res101_ms.yml"
-    elif args.dataset == "coco":
-        args.imdb_name = "coco_2014_train+coco_2014_valminusminival"
-        args.imdbval_name = "coco_2014_minival"
-        args.set_cfgs = ['ANCHOR_SCALES', '[2, 4, 8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '50']
-        cls_r_prob = pickle.load(open(cfg.DATA_DIR + '/coco2014/COCO_graph_r.pkl', 'rb'))
-        cls_r_prob = np.float32(cls_r_prob)
-        cls_a_prob = pickle.load(open(cfg.DATA_DIR + '/coco2014/COCO_graph_a.pkl', 'rb'))
-        cls_a_prob = np.float32(cls_a_prob)
-        args.cfg_file = "cfgs/coco_res101.yml"
 
     if args.cfg_file is not None:
         cfg_from_file(args.cfg_file)
@@ -179,7 +177,7 @@ if __name__ == '__main__':
 
     print('{:d} roidb entries'.format(len(roidb)))
 
-    input_dir = args.load_dir # + "/" + args.net + "/" + args.dataset
+    input_dir = args.load_dir
     if not os.path.exists(input_dir):
         raise Exception('There is no input directory for loading network from ' + input_dir)
     load_name = os.path.join(input_dir,
@@ -203,7 +201,8 @@ if __name__ == '__main__':
         module_size = [0, 0, args.spat_size]
         fasterRCNN = resnet(imdb.classes, None, None, 101, class_agnostic=args.class_agnostic, modules_size=module_size)
     elif args.net == 'baseline':
-    	fasterRCNN = resnet(imdb.classes, 101, pretrained=False, class_agnostic=args.class_agnostic)
+        fasterRCNN = resnet(imdb.classes, 101, pretrained=False, class_agnostic=args.class_agnostic)
+        load_name = os.path.join(input_dir, '{}_faster_rcnn.pth'.format(args.dataset))
     else:
         print('No module define')
 
@@ -245,7 +244,7 @@ if __name__ == '__main__':
     start = time.time()
     max_per_image = 100
 
-    vis = False#args.vis
+    vis = args.vis
 
     if vis:
         thresh = 0.5

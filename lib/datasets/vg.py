@@ -96,17 +96,6 @@ class vg(imdb):
                 'Path does not exist: {}'.format(image_path)
         return image_path
 
-    def heatmap_path_from_index(self, i, pre='vg_', suf='_hp.png'):
-        """
-        Construct an image path from the image's "index" identifier.
-        """
-        index = self._image_index[i]
-        file_name = pre + self._image_set + '/' + '{}'.format(index) + suf
-        heatmap_path = os.path.join(cfg.HEATMAP_DIR, file_name)
-        assert os.path.exists(heatmap_path), \
-                'Path does not exist: {}'.format(heatmap_path)
-        return heatmap_path
-
     def gt_roidb(self):
         """
         Return the database of ground-truth regions of interest.

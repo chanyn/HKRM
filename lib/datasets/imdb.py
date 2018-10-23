@@ -93,9 +93,6 @@ class imdb(object):
   def image_id_at(self, i):
     raise NotImplementedError
 
-  def heatmap_path_from_index(self, i):
-    raise NotImplementedError
-
   def default_roidb(self):
     raise NotImplementedError
 

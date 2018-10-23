@@ -2,7 +2,7 @@
 
 This repository is written by Chenhan Jiang and Hang Xu interned at SenseTime
 
-Code for reproducing the results in the following paper:
+Code for reproducing the results in the following paper, and large part code is reference from [jwyang/faster-rcnn.pytorch](https://github.com/jwyang/faster-rcnn.pytorch):
 
 [**Hybrid Knowledge Routed Modules for Large-scale Object Detection**]()
 
@@ -80,7 +80,7 @@ cd {repo_root}
 mkdir data
 ```
 
-+ **Prior Knowledge**: We instantiate attribute and relation as explicit knowledge from Visual Genome. We provide the [link]() to download VG graph and other graph. We also provide the [frequency statistic]() from VG and procession code in ```lib/dataset/tool/compute_prior.py``` .  So You can transfer prior knowledge to other datasets. 
++ **Prior Knowledge**: We instantiate attribute and relation as explicit knowledge from Visual Genome. We provide the [link](https://pan.baidu.com/s/1eHQQlYvbhSFxJq1nsnLv3Q) to download VG graph and other graph. We also provide the [frequency statistic](https://pan.baidu.com/s/1ScXaiQiWlZhuErhh3gNcag) from VG and procession code in ```lib/dataset/tool/compute_prior.py``` .  So You can transfer prior knowledge to other datasets. 
 
 + **ADE**: We provide [ADE20K](http://groups.csail.mit.edu/vision/datasets/ADE20K/) as an example.
 
@@ -100,9 +100,9 @@ mkdir data
 
 + **Visual Genome**: Download the VG images and annotations from [Visual Genome](http://visualgenome.org/). We use synset as label rather than name, and choose top 1000 and 3000 frequent classes. Our JSON datasets can be download from:
 
-  [VG1000: Train and Test Set for Top 1000 Frequent Classes]()
+  [VG1000: Train and Test Set for Top 1000 Frequent Classes](https://pan.baidu.com/s/1t0BxE348vAjbHuYR-wy7Sg)
 
-  [VG3000: Train and Test Sets for Top 3000 Frequent Classes]()
+  [VG3000: Train and Test Sets for Top 3000 Frequent Classes](https://pan.baidu.com/s/1Mv5vVx0l1ikA9l1EjwCBwA)
 
 
 
@@ -115,11 +115,10 @@ For example, to train the baseline with res101 on VG, simply run:
 ```shell
 CUDA_VISIBLE_DEVICES=$GPU_ID python trainval_baseline.py \
                   --dataset vg --bs $BATCH_SIZE --nw $WORKER_NUMBER \
-                  --lr $LEARNING_RATE --lr_decay_step $DECAY_STEP \
-                  --cude --log_dir $LOG_DIR --save_dir $WHERE_YOU_WANT
+                  --log_dir $LOG_DIR --save_dir $WHERE_YOU_WANT
 ```
 
-where 'bs' is the batch size with default 2, 'log_dir' is the location to save your tensorboard of train, 'save_dir'  is your path to save model. 
+where 'bs' is the batch size with default 2, 'log_dir' is the location to save your tensorboard of train, 'save_dir' is your path to save model. 
 
 Change dataset to 'ade' or 'coco' if you want to train on ADE or COCO.  If you have multi-GPUs, you should add '--mGPUs'.
 
@@ -127,14 +126,12 @@ To train our HKRM with res101 on VG:
 
 ```shell
 CUDA_VISIBLE_DEVICES=$GPU_ID python trainval_HKRM.py \
-                  --datasets vg --bs $BATCH_SIZE --nw $WORKER_NUMBER \
-                  --lr $LEARNING_RATE --lr_decay_step $DECAY_STEP \
-                  --cude --log_dir $LOG_DIR --save_dir $WHERE_YOU_WANT \
-                  --net HKRM --attr_seize 256 --rela_size 256 --spat_size 256
+                  --dataset vg --bs $BATCH_SIZE --nw $WORKER_NUMBER \
+                  --log_dir $LOG_DIR --save_dir $WHERE_YOU_WANT \
+                  --init --net HKRM --attr_size 256 --rela_size 256 --spat_size 256
 ```
 
-where 'net' you can choose in ['HKRM', 'Attribute', 'Relation', 'Spatial'].
-
+where 'net' you can choose in ('HKRM', 'Attribute', 'Relation', 'Spatial'), and you should put [pretrained baseline model](https://pan.baidu.com/s/1L65QTvs0CWO9nxc6QMWuFw) into 'save_dir'.
 
 
 ## Testing
@@ -142,11 +139,12 @@ where 'net' you can choose in ['HKRM', 'Attribute', 'Relation', 'Spatial'].
 If you want to evaluate the detection performance of a pre-trained model on VG test set, simply run:
 
 ```shell
-python test_net.py --dataset pascal_voc --net HKRM \
+python test_net.py --dataset vg --net HKRM \
+                   --load_dir $YOUR_SAVE_DIR \
                    --checksession $SESSION --checkepoch $EPOCH --checkpoint $CHECKPOINT 
 ```
 
-Specify the specific model session, chechepoch and checkpoint, e.g., SESSION=325, EPOCH=12, CHECKPOINT=21985. And we provide the final model that you can load from [trained_model_hkrm]().
+Specify the specific model session, chechepoch and checkpoint, e.g., SESSION=325, EPOCH=12, CHECKPOINT=21985. And we provide the final model that you can load from [trained_model_hkrm](https://pan.baidu.com/s/1KcKY7TcHm8LQ3ZD3B3y3jQ).
 
 
 

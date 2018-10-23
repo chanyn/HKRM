@@ -15,7 +15,8 @@ from model.rpn.proposal_target_layer_cascade_region import _ProposalTargetLayer
 #import pdb
 from model.utils.net_utils import _smooth_l1_loss, _crop_pool_layer, _affine_grid_gen, _affine_theta
 
-
+from matplotlib import pyplot as plt
+import cv2
 
 ## Use region_feature to compute A
 class A_region_compute(nn.Module):
@@ -274,8 +275,12 @@ class _fasterRCNN(nn.Module):
             rpn_loss_bbox = torch.unsqueeze(rpn_loss_bbox, 0)
             RCNN_loss_cls = torch.unsqueeze(RCNN_loss_cls, 0)
             RCNN_loss_bbox = torch.unsqueeze(RCNN_loss_bbox, 0)
-            adja_loss = torch.unsqueeze(adja_loss, 0)
-            adjr_loss = torch.unsqueeze(adjr_loss, 0)
+            try:
+                adja_loss = torch.unsqueeze(adja_loss, 0)
+                adjr_loss = torch.unsqueeze(adjr_loss, 0)
+            except:
+                adjr_loss = adjr_loss
+                adja_loss = adja_loss
             return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label, adja_loss, adjr_loss
 
         return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
