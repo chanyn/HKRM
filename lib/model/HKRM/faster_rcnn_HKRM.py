@@ -251,8 +251,8 @@ class _fasterRCNN(nn.Module):
 
         RCNN_loss_cls = 0.
         RCNN_loss_bbox = 0.
-        adja_loss = 0.
-        adjr_loss = 0.
+        adja_loss = Variable(torch.zeros(1), requires_grad=False).cuda()
+        adjr_loss = Variable(torch.zeros(1), requires_grad=False).cuda()
 
         if self.training:
             # classification loss
@@ -275,12 +275,8 @@ class _fasterRCNN(nn.Module):
             rpn_loss_bbox = torch.unsqueeze(rpn_loss_bbox, 0)
             RCNN_loss_cls = torch.unsqueeze(RCNN_loss_cls, 0)
             RCNN_loss_bbox = torch.unsqueeze(RCNN_loss_bbox, 0)
-            try:
-                adja_loss = torch.unsqueeze(adja_loss, 0)
-                adjr_loss = torch.unsqueeze(adjr_loss, 0)
-            except:
-                adjr_loss = adjr_loss
-                adja_loss = adja_loss
+            adja_loss = torch.unsqueeze(adja_loss, 0)
+            adjr_loss = torch.unsqueeze(adjr_loss, 0)
             return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label, adja_loss, adjr_loss
 
         return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
