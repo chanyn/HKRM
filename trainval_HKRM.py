@@ -299,6 +299,9 @@ if __name__ == '__main__':
     fasterRCNN.load_state_dict(checkpoint['model'], strict=False)
     print("successfully loaded baseline model %s" % (load_name))
 
+  if args.cuda:
+    fasterRCNN.cuda()
+
   if args.resume:
     load_name = os.path.join(output_dir,
                              '{}_{}_{}_{}_{}.pth'.format(args.dataset, args.ftnet, args.checksession,
@@ -307,7 +310,7 @@ if __name__ == '__main__':
     checkpoint = torch.load(load_name)
     args.session = checkpoint['session']
     args.start_epoch = checkpoint['epoch']
-    fasterRCNN.load_state_dict(checkpoint['model'], strict=False)
+    fasterRCNN.load_state_dict(checkpoint['model'])
     optimizer.load_state_dict(checkpoint['optimizer'])
     lr = optimizer.param_groups[0]['lr']
     if 'pooling_mode' in checkpoint.keys():
@@ -316,10 +319,6 @@ if __name__ == '__main__':
 
   if args.mGPUs:
     fasterRCNN = nn.DataParallel(fasterRCNN)
-
-  if args.cuda:
-    fasterRCNN.cuda()
-
 
   iters_per_epoch = int(train_size / args.batch_size)
 
