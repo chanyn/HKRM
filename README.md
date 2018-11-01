@@ -4,7 +4,7 @@ This repository is written by Chenhan Jiang and Hang Xu interned at SenseTime
 
 Code for reproducing the results in the following paper, and large part code is reference from [jwyang/faster-rcnn.pytorch](https://github.com/jwyang/faster-rcnn.pytorch):
 
-[**Hybrid Knowledge Routed Modules for Large-scale Object Detection**]()
+[**Hybrid Knowledge Routed Modules for Large-scale Object Detection**](https://arxiv.org/abs/1810.12681)
 
 Chenhan Jiang, Hang Xu, Xiaodan Liang, Liang Lin
 
