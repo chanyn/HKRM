@@ -18,6 +18,7 @@ import torch.optim as optim
 from tensorboardX import SummaryWriter
 import torchvision.transforms as transforms
 from torch.utils.data.sampler import Sampler
+from torch.autograd import Variable
 
 from roi_data_layer.roidb import combined_roidb
 from roi_data_layer.roibatchLoader import roibatchLoader
@@ -241,6 +242,12 @@ if __name__ == '__main__':
     num_boxes = num_boxes.cuda()
     gt_boxes = gt_boxes.cuda()
 
+  # make variablet
+  im_data = Variable(im_data)
+  im_info = Variable(im_info)
+  num_boxes = Variable(num_boxes)
+  gt_boxes = Variable(gt_boxes)
+
   if args.cuda:
     cfg.CUDA = True
 
@@ -336,10 +343,10 @@ if __name__ == '__main__':
     for step in range(iters_per_epoch):
     # for step, data in enumerate(dataloader):
         data = next(data_iter)
-        im_data.resize_(data[0].size()).copy_(data[0])
-        im_info.resize_(data[1].size()).copy_(data[1])
-        gt_boxes.resize_(data[2].size()).copy_(data[2])
-        num_boxes.resize_(data[3].size()).copy_(data[3])
+        im_data.data.resize_(data[0].size()).copy_(data[0])
+        im_info.data.resize_(data[1].size()).copy_(data[1])
+        gt_boxes.data.resize_(data[2].size()).copy_(data[2])
+        num_boxes.data.resize_(data[3].size()).copy_(data[3])
 
         fasterRCNN.zero_grad()
 
@@ -352,7 +359,7 @@ if __name__ == '__main__':
                + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()\
                + adja_loss.mean() + adjr_loss.mean()
 
-        loss_temp += loss.item()
+        loss_temp += loss.data[0]
 
         # backward
         optimizer.zero_grad()
@@ -366,23 +373,23 @@ if __name__ == '__main__':
             if step > 0:
                 loss_temp /= (args.disp_interval + 1)# loss_temp is aver loss
             if args.mGPUs:
-                loss_rpn_cls = rpn_loss_cls.mean().item()
-                loss_rpn_box = rpn_loss_box.mean().item()
-                loss_rcnn_cls = RCNN_loss_cls.mean().item()
-                loss_rcnn_box = RCNN_loss_bbox.mean().item()
-                loss_adja = adja_loss.mean().item()
-                loss_adjr = adjr_loss.mean().item()
-                fg_cnt = torch.sum(rois_label.ne(0))
-                bg_cnt = rois_label.numel() - fg_cnt
+                loss_rpn_cls = rpn_loss_cls.mean().data[0]
+                loss_rpn_box = rpn_loss_box.mean().data[0]
+                loss_rcnn_cls = RCNN_loss_cls.mean().data[0]
+                loss_rcnn_box = RCNN_loss_bbox.mean().data[0]
+                loss_adja = adja_loss.mean().data[0]
+                loss_adjr = adjr_loss.mean().data[0]
+                fg_cnt = torch.sum(rois_label.data.ne(0))
+                bg_cnt = rois_label.data.numel() - fg_cnt
             else:
-                loss_rpn_cls = rpn_loss_cls.item()
-                loss_rpn_box = rpn_loss_box.item()
-                loss_rcnn_cls = RCNN_loss_cls.item()
-                loss_rcnn_box = RCNN_loss_bbox.item()
-                loss_adja = adja_loss.item()
-                loss_adjr = adjr_loss.item()
-                fg_cnt = torch.sum(rois_label.ne(0))
-                bg_cnt = rois_label.numel() - fg_cnt
+                loss_rpn_cls = rpn_loss_cls.data[0]
+                loss_rpn_box = rpn_loss_box.data[0]
+                loss_rcnn_cls = RCNN_loss_cls.data[0]
+                loss_rcnn_box = RCNN_loss_bbox.data[0]
+                loss_adja = adja_loss.data[0]
+                loss_adjr = adjr_loss.data[0]
+                fg_cnt = torch.sum(rois_label.data.ne(0))
+                bg_cnt = rois_label.data.numel() - fg_cnt
 
             print("[session %d][epoch %2d][iter %4d] loss: %.4f, lr: %.2e" \
                   % (args.session, epoch, step, loss_temp, lr))
@@ -435,5 +442,3 @@ if __name__ == '__main__':
 
     end = time.time()
     print(end - start)
-
-

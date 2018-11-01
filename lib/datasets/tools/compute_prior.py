@@ -40,7 +40,6 @@ if __name__=='__main__':
     dim_ = 1000
     ## Compute attribute knowledge by JS-diversion
     graph_a = pickle.load(open(data_path + 'vg_attr_frequency_1000.pkl', 'rb'))
-    graph_a2 = pickle.load(open('/data/Detection/vg/' + 'vg_graph_a.pkl', 'rb'))
 
     ## You can get part of graph_a and match name with your datasets
     #  We give an example of compute graph of VisualGenome with 1000 classes

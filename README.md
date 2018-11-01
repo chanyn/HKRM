@@ -26,7 +26,9 @@ https://github.com/chanyn/HKRM.git
 
 + python packages
 
-  + PyTorch >= 0.4.0
+  + PyTorch = 0.3.1
+    
+    *This project can not support pytorch 0.4, higher version will not recur results.*
 
   + Torchvision >= 0.2.0
 
@@ -48,13 +50,13 @@ https://github.com/chanyn/HKRM.git
 
     You can install above package using ```pip```:
 
-    ```pi
+    ```sh
     pip install Cython easydict matplotlib opencv-python pyyaml scipy
     ```
 
 + CUDA 8.0
 
-+ gcc 5.2
++ gcc >= 4.9
 
 
 

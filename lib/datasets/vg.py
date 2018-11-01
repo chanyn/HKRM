@@ -61,7 +61,6 @@ class vg(imdb):
         # Lookup table to map from VG category ids to internal class indices
         self._vg_id_to_class_ind = dict([(self._class_to_vg_id[cls], self._class_to_ind[cls])
                                          for cls in self._classes[1:]])
-
         self._image_index = self._VG.get_img_ids()
         # Default to roidb handler
         self.set_proposal_method('gt')

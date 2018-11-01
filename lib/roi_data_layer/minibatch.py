@@ -16,8 +16,6 @@ from scipy.misc import imread
 from model.utils.config import cfg
 from model.utils.blob import prep_im_for_blob, im_list_to_blob
 import pdb
-import cv2
-
 def get_minibatch(roidb, num_classes, random_scale_inds):
   """Given a roidb, construct a minibatch sampled from it."""
   num_images = len(roidb)
@@ -79,7 +77,6 @@ def _get_image_blob(roidb, scale_inds):
     target_size = cfg.TRAIN.SCALES[scale_inds[i]]
     im, im_scale = prep_im_for_blob(im, cfg.PIXEL_MEANS, target_size,
                     cfg.TRAIN.MAX_SIZE)
-
     im_scales.append(im_scale)
     processed_ims.append(im)
 

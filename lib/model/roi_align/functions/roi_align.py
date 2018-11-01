@@ -26,11 +26,7 @@ class RoIAlignFunction(Function):
                                              self.spatial_scale, features,
                                              rois, output)
         else:
-            roi_align.roi_align_forward(self.aligned_height,
-                                        self.aligned_width,
-                                        self.spatial_scale, features,
-                                        rois, output)
-#            raise NotImplementedError
+            raise NotImplementedError
 
         return output
 

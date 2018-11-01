@@ -236,8 +236,8 @@ class resnet(_fasterRCNN):
       resnet.load_state_dict({k:v for k,v in state_dict.items() if k in resnet.state_dict()})
 
     # Build resnet.
-    self.RCNN_base = nn.Sequential(resnet.conv1, resnet.bn1, resnet.relu,
-      resnet.maxpool, resnet.layer1, resnet.layer2, resnet.layer3)
+    self.RCNN_base = nn.Sequential(resnet.conv1, resnet.bn1,resnet.relu,
+      resnet.maxpool,resnet.layer1,resnet.layer2,resnet.layer3)
 
     self.RCNN_top = nn.Sequential(resnet.layer4)
     

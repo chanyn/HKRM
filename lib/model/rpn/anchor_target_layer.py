@@ -132,8 +132,7 @@ class _AnchorTargetLayer(nn.Module):
                 disable_inds = fg_inds[rand_num[:fg_inds.size(0)-num_fg]]
                 labels[i][disable_inds] = -1
 
-            # num_bg = cfg.TRAIN.RPN_BATCHSIZE - sum_fg[i]
-            num_bg = cfg.TRAIN.RPN_BATCHSIZE - torch.sum((labels == 1).int(), 1)[i]
+            num_bg = cfg.TRAIN.RPN_BATCHSIZE - sum_fg[i]
 
             # subsample negative labels if we have too many
             if sum_bg[i] > num_bg:
@@ -154,8 +153,8 @@ class _AnchorTargetLayer(nn.Module):
 
         if cfg.TRAIN.RPN_POSITIVE_WEIGHT < 0:
             num_examples = torch.sum(labels[i] >= 0)
-            positive_weights = 1.0 / num_examples.item()
-            negative_weights = 1.0 / num_examples.item()
+            positive_weights = 1.0 / num_examples
+            negative_weights = 1.0 / num_examples
         else:
             assert ((cfg.TRAIN.RPN_POSITIVE_WEIGHT > 0) &
                     (cfg.TRAIN.RPN_POSITIVE_WEIGHT < 1))

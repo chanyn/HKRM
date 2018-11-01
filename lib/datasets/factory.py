@@ -24,16 +24,16 @@ for year in ['2007', '2012']:
   for split in ['train', 'val', 'trainval', 'test']:
     name = 'voc_{}_{}'.format(year, split)
     __sets[name] = (lambda split=split, year=year: pascal_voc(split, year))
-# #
-# for year in ['2014']:
-#   for split in ['train', 'val', 'minival', 'valminusminival', 'trainval']:
-#     name = 'coco_{}_{}'.format(year, split)
-#     __sets[name] = (lambda split=split, year=year: coco(split, year))
-# #
-# for year in ['2017']:
-#   for split in ['train', 'val']:
-#     name = 'coco_{}_{}'.format(year, split)
-#     __sets[name] = (lambda split=split, year=year: coco(split, year))
+
+for year in ['2014']:
+  for split in ['train', 'val', 'minival', 'valminusminival', 'trainval']:
+    name = 'coco_{}_{}'.format(year, split)
+    __sets[name] = (lambda split=split, year=year: coco(split, year))
+
+for year in ['2017']:
+  for split in ['train', 'val']:
+    name = 'coco_{}_{}'.format(year, split)
+    __sets[name] = (lambda split=split, year=year: coco(split, year))
 #
 for split in ['train', 'val', 'train_big', 'val_big']:
     name = 'vg_{}'.format(split)

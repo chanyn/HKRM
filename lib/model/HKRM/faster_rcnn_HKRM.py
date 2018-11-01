@@ -2,6 +2,7 @@ import random
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.autograd import Variable
 import torchvision.models as models
 from torch.autograd import Variable
 import numpy as np
@@ -15,8 +16,7 @@ from model.rpn.proposal_target_layer_cascade_region import _ProposalTargetLayer
 #import pdb
 from model.utils.net_utils import _smooth_l1_loss, _crop_pool_layer, _affine_grid_gen, _affine_theta
 
-from matplotlib import pyplot as plt
-import cv2
+
 
 ## Use region_feature to compute A
 class A_region_compute(nn.Module):
@@ -36,7 +36,7 @@ class A_region_compute(nn.Module):
         # Use softmax
         W_new = W_new.contiguous()
         W_new=W_new.squeeze(1)
-        W_new = F.softmax(W_new, 2)
+        W_new = F.softmax(W_new,2)
         Adj_M=W_new      
         return Adj_M
 
@@ -52,10 +52,10 @@ class Know_Rout_mod_im(nn.Module):
     def forward(self, reigon_feature, x):
         no_node = reigon_feature.shape[1]
         bs = reigon_feature.shape[0]
-        A = torch.zeros(bs, no_node, no_node).cuda()
-        Iden = torch.eye(no_node).unsqueeze(0).repeat(bs, 1, 1).cuda()
+        A = Variable(torch.zeros(bs,no_node,no_node)).cuda()
+        Iden = Variable(torch.eye(no_node).unsqueeze(0).repeat(bs, 1, 1), requires_grad=False).cuda()
         for i in range(self.num_A):
-            A = self._modules['compute_A{}'.format(i)](reigon_feature.detach()) + A + Iden
+            A = self._modules['compute_A{}'.format(i)](reigon_feature) + A + Iden
         # Row sum to one
         A = A / A.sum(1).unsqueeze(1)
         x = torch.bmm(A, x)
@@ -99,7 +99,7 @@ class Know_Rout_mod(nn.Module):
         self.transferW = nn.Linear(input_features, output_features)
 
     def forward(self, cat_feature):
-        cat_feature_stop = cat_feature.detach()
+        cat_feature_stop = Variable(cat_feature.data)
         Adj_M1 = self.lay_1_compute_A(cat_feature_stop)
         # batch matrix-matrix product
         W_M1 = F.softmax(Adj_M1, 2)
@@ -149,6 +149,10 @@ class _fasterRCNN(nn.Module):
     def forward(self, im_data, im_info, gt_boxes, num_boxes):
         batch_size = im_data.size(0)
 
+        im_info = im_info.data
+        gt_boxes = gt_boxes.data
+        num_boxes = num_boxes.data
+
         # feed image data to base model to obtain base feature map
         base_feat = self.RCNN_base(im_data)
 
@@ -163,25 +167,25 @@ class _fasterRCNN(nn.Module):
             # record rois_label
             index_ = rois_label.long()
             if self.module_exist[0]:
-                gt_adj_a = rois_target.new_zeros(batch_size, index_.size(1), index_.size(1), dtype=torch.float32).detach()
+                gt_adj_a = Variable(rois_target.new(batch_size, index_.size(1), index_.size(1)).zero_()).detach()
             if self.module_exist[1]:
-                gt_adj_r = rois_target.new_zeros(batch_size, index_.size(1), index_.size(1), dtype=torch.float32).detach()
+                gt_adj_r = Variable(rois_target.new(batch_size, index_.size(1), index_.size(1)).zero_()).detach()
 
-            rois_label = rois_label.view(-1).long()
-            rois_target = rois_target.view(-1, rois_target.size(2))
-            rois_inside_ws = rois_inside_ws.view(-1, rois_inside_ws.size(2))
-            rois_outside_ws = rois_outside_ws.view(-1, rois_outside_ws.size(2))
+            rois_label = Variable(rois_label.view(-1).long())
+            rois_target = Variable(rois_target.view(-1, rois_target.size(2)))
+            rois_inside_ws = Variable(rois_inside_ws.view(-1, rois_inside_ws.size(2)))
+            rois_outside_ws = Variable(rois_outside_ws.view(-1, rois_outside_ws.size(2)))
             
             if self.module_exist[0]:
                 for b in range(batch_size):
                     temp = self.gt_adj_a[index_[b], :]
-                    temp = temp.transpose(0, 1)[index_[b], :]
-                    gt_adj_a[b] = temp.transpose(0, 1)
+                    temp = temp.transpose(0,1)[index_[b], :]
+                    gt_adj_a[b] = temp.transpose(0,1)
             if self.module_exist[1]:
                 for b in range(batch_size):
                     temp = self.gt_adj_r[index_[b], :]
-                    temp = temp.transpose(0, 1)[index_[b], :]
-                    gt_adj_r[b] = temp.transpose(0, 1)
+                    temp = temp.transpose(0,1)[index_[b], :]
+                    gt_adj_r[b] = temp.transpose(0,1)
 
 
         else:
@@ -193,14 +197,15 @@ class _fasterRCNN(nn.Module):
             rpn_loss_bbox = 0
             output_bg_score = output_cls_score
 
+        rois = Variable(rois)
         # do roi pooling based on predicted rois
 
         if cfg.POOLING_MODE == 'crop':
             # pdb.set_trace()
             # pooled_feat_anchor = _crop_pool_layer(base_feat, rois.view(-1, 5))
             grid_xy = _affine_grid_gen(rois.view(-1, 5), base_feat.size()[2:], self.grid_size)
-            grid_yx = torch.stack([grid_xy[:, :, :, 1], grid_xy[:, :, :, 0]], 3).contiguous()
-            pooled_feat = self.RCNN_roi_crop(base_feat, grid_yx.detach())
+            grid_yx = torch.stack([grid_xy.data[:, :, :, 1], grid_xy.data[:, :, :, 0]], 3).contiguous()
+            pooled_feat = self.RCNN_roi_crop(base_feat, Variable(grid_yx).detach())
             if cfg.CROP_RESIZE_WITH_MAX_POOL:
                 pooled_feat = F.max_pool2d(pooled_feat, 2, 2)
         elif cfg.POOLING_MODE == 'align':
@@ -212,6 +217,7 @@ class _fasterRCNN(nn.Module):
 
         # feed pooled features to top model
         pooled_feat = self._head_to_tail(pooled_feat)
+        # pooled_feat [bs*128,2048]
 
         # Region feature
         if self.module_exist[2]:
@@ -251,8 +257,8 @@ class _fasterRCNN(nn.Module):
 
         RCNN_loss_cls = 0.
         RCNN_loss_bbox = 0.
-        adja_loss = Variable(torch.zeros(1), requires_grad=False).cuda()
-        adjr_loss = Variable(torch.zeros(1), requires_grad=False).cuda()
+        adja_loss = Variable(torch.zeros(1), requires_grad = False).cuda()
+        adjr_loss = Variable(torch.zeros(1), requires_grad = False).cuda()
 
         if self.training:
             # classification loss
@@ -271,12 +277,6 @@ class _fasterRCNN(nn.Module):
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
 
         if self.training:
-            rpn_loss_cls = torch.unsqueeze(rpn_loss_cls, 0)
-            rpn_loss_bbox = torch.unsqueeze(rpn_loss_bbox, 0)
-            RCNN_loss_cls = torch.unsqueeze(RCNN_loss_cls, 0)
-            RCNN_loss_bbox = torch.unsqueeze(RCNN_loss_bbox, 0)
-            adja_loss = torch.unsqueeze(adja_loss, 0)
-            adjr_loss = torch.unsqueeze(adjr_loss, 0)
             return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label, adja_loss, adjr_loss
 
         return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label

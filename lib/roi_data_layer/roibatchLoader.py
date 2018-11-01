@@ -75,9 +75,6 @@ class roibatchLoader(data.Dataset):
     im_info = torch.from_numpy(blobs['im_info'])
     # we need to random shuffle the bounding box.
     data_height, data_width = data.size(1), data.size(2)
-    # heatmap channels
-    data_channel = data.size(3)
-    assert data_channel in [3, 4], "Error channels of data： 3 or 4"
     if self.training:
         np.random.shuffle(blobs['gt_boxes'])
         gt_boxes = torch.from_numpy(blobs['gt_boxes'])
@@ -168,7 +165,7 @@ class roibatchLoader(data.Dataset):
             trim_size = int(np.floor(data_width / ratio))
 
             padding_data = torch.FloatTensor(int(np.ceil(data_width / ratio)), \
-                                             data_width, data_channel).zero_()
+                                             data_width, 3).zero_()
 
             padding_data[:data_height, :, :] = data[0]
             # update im_info
@@ -178,12 +175,12 @@ class roibatchLoader(data.Dataset):
             # this means that data_width > data_height
             # if the image need to crop.
             padding_data = torch.FloatTensor(data_height, \
-                                             int(np.ceil(data_height * ratio)), data_channel).zero_()
+                                             int(np.ceil(data_height * ratio)), 3).zero_()
             padding_data[:, :data_width, :] = data[0]
             im_info[0, 1] = padding_data.size(1)
         else:
             trim_size = min(data_height, data_width)
-            padding_data = torch.FloatTensor(trim_size, trim_size, data_channel).zero_()
+            padding_data = torch.FloatTensor(trim_size, trim_size, 3).zero_()
             padding_data = data[0][:trim_size, :trim_size, :]
             gt_boxes[:, :4].clamp_(0, trim_size)
             im_info[0, 0] = trim_size
@@ -208,7 +205,7 @@ class roibatchLoader(data.Dataset):
 
         return padding_data, im_info, gt_boxes_padding, num_boxes
     else:
-        data = data.permute(0, 3, 1, 2).contiguous().view(data_channel, data_height, data_width)
+        data = data.permute(0, 3, 1, 2).contiguous().view(3, data_height, data_width)
         im_info = im_info.view(3)
 
         gt_boxes = torch.FloatTensor([1,1,1,1,1]).expand(1,1,-1)
