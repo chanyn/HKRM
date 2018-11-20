@@ -82,7 +82,7 @@ cd {repo_root}
 mkdir data
 ```
 
-+ **Prior Knowledge**: We instantiate attribute and relation as explicit knowledge from Visual Genome. We provide the [link](https://pan.baidu.com/s/1eHQQlYvbhSFxJq1nsnLv3Q) to download VG graph and other graph. We also provide the [frequency statistic](https://pan.baidu.com/s/1ScXaiQiWlZhuErhh3gNcag) from VG and procession code in ```lib/dataset/tool/compute_prior.py``` .  So You can transfer prior knowledge to other datasets. 
++ **Prior Knowledge**: We instantiate attribute and relation as explicit knowledge from Visual Genome. We provide the [link](https://drive.google.com/file/d/1ceFJV44C9XjcmBS3xNiIMaf3vsPE3yP8/view?usp=sharing) to download VG graph and other graph. We also provide the [frequency statistic](https://drive.google.com/file/d/11TMCOSYCQmCRB2PVMf4Jo9mEODUs12Cq/view?usp=sharing) from VG and procession code in ```lib/dataset/tool/compute_prior.py``` .  So You can transfer prior knowledge to other datasets. 
 
 + **ADE**: We provide [ADE20K](http://groups.csail.mit.edu/vision/datasets/ADE20K/) as an example.
 
@@ -94,7 +94,7 @@ mkdir data
   mv ADE20K_2016_07_26/* ./
   rmdir ADE20K_2016_07_26
   # then get the list of overlap with VG and train/test split
-  wget -v http://.../ADE_split.tar.gz
+  wget -v https://drive.google.com/file/d/1rbN0MZM4ome7gk4hRAziJ60IivkMYWbm/view?usp=sharing
   tar -xzvf ADE_split.tar.gz
   rm -vf ADE_split.tar.gz
   cd ../..
@@ -102,9 +102,9 @@ mkdir data
 
 + **Visual Genome**: Download the VG images and annotations from [Visual Genome](http://visualgenome.org/). We use synset as label rather than name, and choose top 1000 and 3000 frequent classes. Our JSON datasets can be download from:
 
-  [VG1000: Train and Test Set for Top 1000 Frequent Classes](https://pan.baidu.com/s/1t0BxE348vAjbHuYR-wy7Sg)
+  [VG1000: Train and Test Set for Top 1000 Frequent Classes](https://drive.google.com/file/d/1PyUa5j0v0qKyf4TvUnHW-3LwSzJep9XE/view?usp=sharing)
 
-  [VG3000: Train and Test Sets for Top 3000 Frequent Classes](https://pan.baidu.com/s/1Mv5vVx0l1ikA9l1EjwCBwA)
+  [VG3000: Train and Test Sets for Top 3000 Frequent Classes](https://drive.google.com/file/d/1YF9UorYbYHcYlHT1tYP81abauaK8goYX/view?usp=sharing)
 
 
 
@@ -133,7 +133,7 @@ CUDA_VISIBLE_DEVICES=$GPU_ID python trainval_HKRM.py \
                   --init --net HKRM --attr_size 256 --rela_size 256 --spat_size 256
 ```
 
-where 'net' you can choose in ('HKRM', 'Attribute', 'Relation', 'Spatial'), and you should put [pretrained baseline model](https://pan.baidu.com/s/1L65QTvs0CWO9nxc6QMWuFw) into 'save_dir'.
+where 'net' you can choose in ('HKRM', 'Attribute', 'Relation', 'Spatial'), and you should put [pretrained baseline model](https://drive.google.com/file/d/1sCPYYkKnYyBPJ281ivY8J9NBSDWDTs2L/view?usp=sharing) into 'save_dir'.
 
 
 ## Testing
@@ -146,7 +146,7 @@ python test_net.py --dataset vg --net HKRM \
                    --checksession $SESSION --checkepoch $EPOCH --checkpoint $CHECKPOINT 
 ```
 
-Specify the specific model session, chechepoch and checkpoint, e.g., SESSION=325, EPOCH=12, CHECKPOINT=21985. And we provide the final model that you can load from [trained_model_hkrm](https://pan.baidu.com/s/1KcKY7TcHm8LQ3ZD3B3y3jQ).
+Specify the specific model session, chechepoch and checkpoint, e.g., SESSION=325, EPOCH=12, CHECKPOINT=21985. And we provide the final model that you can load from [trained_model_hkrm](https://drive.google.com/file/d/1FNIhxMSaJoeOobzvTEgUdT_uNq4hEPzB/view?usp=sharing).
 
 
 
