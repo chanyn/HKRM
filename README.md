@@ -10,7 +10,7 @@ Chenhan Jiang, Hang Xu, Xiaodan Liang, Liang Lin
 
 *Neural Information Processing Systems (NIPS), 2018*
 
-We also provide Supplementary Materials [download address](https://drive.google.com/open?id=1rlZV4Sy8l0cWE7Zp7jo183SXJd2YWJXP).
+We also provide **Supplementary Materials** [download address](https://drive.google.com/open?id=1rlZV4Sy8l0cWE7Zp7jo183SXJd2YWJXP).
 
 ## Results
 
