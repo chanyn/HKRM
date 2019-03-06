@@ -108,6 +108,7 @@ mkdir data
 
   [VG3000: Train and Test Sets for Top 3000 Frequent Classes](https://drive.google.com/file/d/1YF9UorYbYHcYlHT1tYP81abauaK8goYX/view?usp=sharing)
 
++ **Other Datasets**: We also implement our module on MSCOCO and PASCAL VOC. The classes of these datasets overlap with Visual Genome top 3000 frequent categories. So we get corresponding graph from VG3000. You can directly download [MSCOCO and PACAL VOC graphs](https://drive.google.com/open?id=1b5stAsxHJSJyfL29YOZlnSJO83GP-8dn), or you can follow the transfer example in ***lib/tools/collect_coco_voc_gtgraph.py***.
 
 
 ## Training 
